@@ -566,6 +566,8 @@
 		
 		[[NSGraphicsContext currentContext] restoreGraphicsState];
 		
+		[viewportMovement release];
+		
     // draw a focus ring...?
 		
 		if ( [self showsFirstResponder] )
@@ -1196,7 +1198,7 @@
 			[mutableDefaultsValue setObject:keyChars forKey:@"keyChars"];
 			[mutableDefaultsValue setObject:keyCharsIgnoringModifiers forKey:@"keyCharsIgnoringModifiers"];
 			
-			defaultsValue = [mutableDefaultsValue copy];
+			defaultsValue = [[mutableDefaultsValue copy] autorelease];
 			[mutableDefaultsValue release];
 			
 		}
