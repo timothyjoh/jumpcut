@@ -52,7 +52,7 @@ void resolveHSV(float *color1, float *color2);
   {
   CGFunctionRelease(gradientFunction);
   
-  CTGradientElement *elementToRemove = elementList;
+  CTGradientElement *elementToRemove;
   while(elementList != nil)
 	{
 	elementToRemove = elementList;
