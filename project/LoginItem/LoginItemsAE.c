@@ -43,7 +43,7 @@
 	Change History (most recent first):
 
 $Log: LoginItemsAE.c,v $
-Revision 1.1  2005/09/27 12:29:26         
+Revision 1.1  2005/09/27 12:29:26
 First checked in.
 
 
@@ -57,9 +57,9 @@ First checked in.
 
 // System interfaces
 
-// We need to pull in all of Carbon just to get the definition of 
-// pProperties.  *sigh*  This is purely a compile-time dependency, 
-// which is why we include it in the implementation and not the 
+// We need to pull in all of Carbon just to get the definition of
+// pProperties.  *sigh*  This is purely a compile-time dependency,
+// which is why we include it in the implementation and not the
 // header.
 
 #include <Carbon/Carbon.h>
@@ -78,11 +78,11 @@ static OSStatus LaunchSystemEvents(ProcessSerialNumber *psnPtr)
 {
 	OSStatus 			err;
 	FSRef				appRef;
-	
+
 	assert(psnPtr != NULL);
 
 	// Ask Launch Services to find System Events by creator.
-	
+
 	err = LSFindApplicationForInfo(
 		kSystemEventsCreator,
 		NULL,
@@ -92,31 +92,31 @@ static OSStatus LaunchSystemEvents(ProcessSerialNumber *psnPtr)
 	);
 
     // Launch it!
-    
+
     if (err == noErr) {
         if ( LSOpenApplication != NULL ) {
             LSApplicationParameters     appParams;
-            
+
             // Do it the easy way on 10.4 and later.
-            
+
             memset(&appParams, 0, sizeof(appParams));
             appParams.version = 0;
             appParams.flags = kLSLaunchDefaults;
             appParams.application = &appRef;
-            
+
             err = LSOpenApplication(&appParams, psnPtr);
         } else {
             FSSpec				appSpec;
             LaunchParamBlockRec lpb;
-            
+
             // Do it the compatible way on earlier systems.
-            
-            // I launch System Events using LaunchApplication, rather than 
-            // Launch Services, because LaunchApplication gives me back 
-            // the ProcessSerialNumber.  Unfortunately this requires me to 
-            // get an FSSpec for the application because there's no 
+
+            // I launch System Events using LaunchApplication, rather than
+            // Launch Services, because LaunchApplication gives me back
+            // the ProcessSerialNumber.  Unfortunately this requires me to
+            // get an FSSpec for the application because there's no
             // FSRef version of Launch Application.
-            
+
             if (err == noErr) {
                 err = FSGetCatalogInfo(&appRef, kFSCatInfoNone, NULL, NULL, &appSpec, NULL);
             }
@@ -126,7 +126,7 @@ static OSStatus LaunchSystemEvents(ProcessSerialNumber *psnPtr)
                 lpb.launchEPBLength    = extendedBlockLen;
                 lpb.launchControlFlags = launchContinue | launchNoFileFlags;
                 lpb.launchAppSpec      = &appSpec;
-                
+
                 err = LaunchApplication(&lpb);
             }
             if (err == noErr) {
@@ -139,13 +139,13 @@ static OSStatus LaunchSystemEvents(ProcessSerialNumber *psnPtr)
 }
 
 static OSStatus FindSystemEvents(ProcessSerialNumber *psnPtr)
-	// Finds the "System Events" process or, if it's not 
+	// Finds the "System Events" process or, if it's not
 	// running, launches it.
 {
 	OSStatus		err;
 	Boolean			found;
 	ProcessInfoRec	info;
-	
+
 	assert(psnPtr != NULL);
 
 	psnPtr->lowLongOfPSN	= kNoProcess;
@@ -153,7 +153,7 @@ static OSStatus FindSystemEvents(ProcessSerialNumber *psnPtr)
 
 	do {
 		err = GetNextProcess(psnPtr);
-		if (err == noErr) {	
+		if (err == noErr) {
 			memset(&info, 0, sizeof(info));
 			err = GetProcessInformation(psnPtr, &info);
 		}
@@ -179,14 +179,14 @@ static OSStatus FindSystemEvents(ProcessSerialNumber *psnPtr)
 static OSStatus SendAppleEvent(const AEDesc *event, AEDesc *reply)
 	// This is the bottleneck routine we use for sending Apple events.
 	// It has a number of neato features.
-	// 
-	// o It use the "AEMach.h" routine AESendMessage because that allows 
-	//   us to do an RPC without having to field UI events while waiting 
+	//
+	// o It use the "AEMach.h" routine AESendMessage because that allows
+	//   us to do an RPC without having to field UI events while waiting
 	//   for the reply.  Yay for Mac OS X!
 	//
 	// o It automatically extracts the error from the reply.
 	//
-	// o It allows you to enable printing of events and their replies 
+	// o It allows you to enable printing of events and their replies
 	//   for debugging purposes.
 {
 	static const long kAETimeoutTicks = 5 * 60;
@@ -195,19 +195,19 @@ static OSStatus SendAppleEvent(const AEDesc *event, AEDesc *reply)
 	DescType	junkType;
 	Size		junkSize;
 
-	// Normally I don't declare function prototypes in local scope, 
-	// but I made this exception because I don't want anyone except 
-	// for this routine calling GDBPrintAEDesc.  This routine takes 
-	// care to only link with the routine when debugging is enabled; 
+	// Normally I don't declare function prototypes in local scope,
+	// but I made this exception because I don't want anyone except
+	// for this routine calling GDBPrintAEDesc.  This routine takes
+	// care to only link with the routine when debugging is enabled;
 	// everyone else might not be so careful.
-	
+
 	#if LOGIN_ITEMS_AE_PRINT_DESC
 
 		extern void GDBPrintAEDesc(const AEDesc *desc);
-			// This is private system function used to print a 
-			// textual representation of an AEDesc to stderr.  
-			// It's very handy when debugging, and is meant only 
-			// for that purpose.  It's only available to Mach-O 
+			// This is private system function used to print a
+			// textual representation of an AEDesc to stderr.
+			// It's very handy when debugging, and is meant only
+			// for that purpose.  It's only available to Mach-O
 			// clients.  We use it when debugging *only*.
 
 	#endif
@@ -225,27 +225,27 @@ static OSStatus SendAppleEvent(const AEDesc *event, AEDesc *reply)
 		GDBPrintAEDesc(reply);
 	#endif
 
-	// Extract any error from the Apple event handler via the 
+	// Extract any error from the Apple event handler via the
 	// keyErrorNumber parameter of the reply.
-	
+
 	if ( (err == noErr) && (reply->descriptorType != typeNull) ) {
 		err = AEGetParamPtr(
-			reply, 
-			keyErrorNumber, 
-			typeShortInteger, 
+			reply,
+			keyErrorNumber,
+			typeShortInteger,
 			&junkType,
-			&replyErr, 
-			sizeof(replyErr), 
+			&replyErr,
+			sizeof(replyErr),
 			&junkSize
 		);
-		
+
 		if (err == errAEDescNotFound ) {
 			err = noErr;
 		} else {
 			err = replyErr;
 		}
 	}
-	
+
 	return err;
 }
 
@@ -254,7 +254,7 @@ static OSStatus SendAppleEvent(const AEDesc *event, AEDesc *reply)
 
 enum {
 	cLoginItem = 'logi',
-	
+
 	propPath   = 'ppth',
 	propHidden = 'hidn'
 };
@@ -267,7 +267,7 @@ static const AEDesc kAENull = { typeNull, NULL };
 static void AEDisposeDescQ(AEDesc *descPtr)
 {
     OSStatus    junk;
-    
+
     junk = AEDisposeDesc(descPtr);
     assert(junk == noErr);
     *descPtr = kAENull;
@@ -281,16 +281,16 @@ static void CFQRelease(CFTypeRef cf)
 }
 
 static OSStatus CreateCFArrayFromAEDescList(
-	const AEDescList *	descList, 
+	const AEDescList *	descList,
 	CFArrayRef *		itemsPtr
 )
-	// This routine's input is an AEDescList that contains replies 
-	// from the "properties of every login item" event.  Each element 
-	// of the list is an AERecord with two important properties, 
-	// "path" and "hidden".  This routine creates a CFArray that 
-	// corresponds to this list.  Each element of the CFArray 
-	// contains two properties, kLIAEURL and 
-	// kLIAEHidden, that are derived from the corresponding 
+	// This routine's input is an AEDescList that contains replies
+	// from the "properties of every login item" event.  Each element
+	// of the list is an AERecord with two important properties,
+	// "path" and "hidden".  This routine creates a CFArray that
+	// corresponds to this list.  Each element of the CFArray
+	// contains two properties, kLIAEURL and
+	// kLIAEHidden, that are derived from the corresponding
 	// AERecord properties.
 	//
 	// On entry, descList must not be NULL
@@ -306,22 +306,22 @@ static OSStatus CreateCFArrayFromAEDescList(
 	AEKeyword			junkKeyword;
 	DescType			junkType;
 	Size				junkSize;
-	
+
 	assert( itemsPtr != NULL);
 	assert(*itemsPtr == NULL);
 
 	result = NULL;
-	
+
 	// Create a place for the result.
-	
+
     err = noErr;
     result = CFArrayCreateMutable(NULL, 0, &kCFTypeArrayCallBacks);
     if (result == NULL) {
         err = coreFoundationUnknownErr;
     }
-	
+
 	// For each element in the descriptor list...
-	
+
 	if (err == noErr) {
 		err = AECountItems(descList, &itemCount);
 	}
@@ -334,38 +334,38 @@ static OSStatus CreateCFArrayFromAEDescList(
 			CFURLRef			thisItemURL;
 			Boolean				thisItemHidden;
 			CFDictionaryRef		thisItemDict;
-			
+
 			thisItem = kAENull;
 			thisItemURL = NULL;
 			thisItemDict = NULL;
-			
+
 			// Get this element's AERecord.
-			
+
 			err = AEGetNthDesc(descList, itemIndex, typeAERecord, &junkKeyword, &thisItem);
 
 			// Extract the path and create a CFURL.
 
 			if (err == noErr) {
 				err = AEGetKeyPtr(
-					&thisItem, 
-					propPath, 
-					typeUTF8Text, 
-					&junkType, 
-					thisPath, 
+					&thisItem,
+					propPath,
+					typeUTF8Text,
+					&junkType,
+					thisPath,
 					sizeof(thisPath) - 1, 		// to ensure that we can always add null terminator
 					&thisPathSize
 				);
 			}
 			if (err == noErr) {
 				thisPath[thisPathSize] = 0;
-				
+
 				err = FSPathMakeRef(thisPath, &thisItemRef, NULL);
-				
+
 				if (err == noErr) {
 					thisItemURL = CFURLCreateFromFSRef(NULL, &thisItemRef);
 				} else {
 					err = noErr;			// swallow error and create an imprecise URL
-					
+
 					thisItemURL = CFURLCreateFromFileSystemRepresentation(
 						NULL,
 						thisPath,
@@ -377,23 +377,23 @@ static OSStatus CreateCFArrayFromAEDescList(
 					err = coreFoundationUnknownErr;
 				}
 			}
-			
+
 			// Extract the hidden flag.
-			
+
 			if (err == noErr) {
 				err = AEGetKeyPtr(
-					&thisItem, 
-					propHidden, 
-					typeBoolean, 
-					&junkType, 
-					&thisItemHidden, 
+					&thisItem,
+					propHidden,
+					typeBoolean,
+					&junkType,
+					&thisItemHidden,
 					sizeof(thisItemHidden),
 					&junkSize
 				);
-                
-                // Work around <rdar://problem/4052117> by assuming that hidden 
+
+                // Work around <rdar://problem/4052117> by assuming that hidden
                 // is false if we can't get its value.
-                
+
                 if (err != noErr) {
                     thisItemHidden = false;
                     err = noErr;
@@ -401,14 +401,14 @@ static OSStatus CreateCFArrayFromAEDescList(
 			}
 
 			// Create the CFDictionary for this item.
-			
+
 			if (err == noErr) {
 				CFStringRef keys[2];
 				CFTypeRef	values[2];
-				
+
 				keys[0] = kLIAEURL;
 				keys[1] = kLIAEHidden;
-				
+
 				values[0] = thisItemURL;
 				values[1] = (thisItemHidden ? kCFBooleanTrue : kCFBooleanFalse);
 
@@ -424,17 +424,17 @@ static OSStatus CreateCFArrayFromAEDescList(
 					err = coreFoundationUnknownErr;
 				}
 			}
-			
+
 			// Add it to the results array.
-			
+
 			if (err == noErr) {
 				CFArrayAppendValue(result, thisItemDict);
 			}
-						
+
 			AEDisposeDescQ(&thisItem);
 			CFQRelease(thisItemURL);
 			CFQRelease(thisItemDict);
-						
+
 			if (err != noErr) {
 				break;
 			}
@@ -442,7 +442,7 @@ static OSStatus CreateCFArrayFromAEDescList(
 	}
 
 	// Clean up.
-	
+
 	if (err != noErr) {
 		CFQRelease(result);
 		result = NULL;
@@ -459,13 +459,13 @@ static OSStatus SendEventToSystemEventsWithParameters(
 	AppleEvent *	reply,
 	...
 )
-	// Creates an Apple event and sends it to the System Events 
-	// process.  theClass and theEvent are the event class and ID, 
-	// respectively.  If reply is not NULL, the caller gets a copy 
-	// of the reply.  Following reply is a variable number of Apple event 
-	// parameters.  Each AE parameter is made up of two C parameters, 
-	// the first being the AEKeyword, the second being a pointer to 
-	// the AEDesc for that parameter.  This list is terminated by an 
+	// Creates an Apple event and sends it to the System Events
+	// process.  theClass and theEvent are the event class and ID,
+	// respectively.  If reply is not NULL, the caller gets a copy
+	// of the reply.  Following reply is a variable number of Apple event
+	// parameters.  Each AE parameter is made up of two C parameters,
+	// the first being the AEKeyword, the second being a pointer to
+	// the AEDesc for that parameter.  This list is terminated by an
 	// AEKeyword of value 0.
 	//
 	// You typically call this as:
@@ -474,13 +474,13 @@ static OSStatus SendEventToSystemEventsWithParameters(
 	//     kClass,
 	//     kEvent,
 	//     NULL,
-	//     param1_keyword, param1_desc_ptr, 
-	//     param2_keyword, param2_desc_ptr, 
+	//     param1_keyword, param1_desc_ptr,
+	//     param2_keyword, param2_desc_ptr,
 	//     0
 	// );
 	//
 	// On entry, reply must be NULL or *reply must be the null AEDesc.
-	// On success, if reply is not NULL, *reply will be the AE reply 
+	// On success, if reply is not NULL, *reply will be the AE reply
 	// (that is, not a null desc).
 	// On error, if reply is not NULL, *reply will be the null AEDesc.
 {
@@ -489,34 +489,32 @@ static OSStatus SendEventToSystemEventsWithParameters(
 	AppleEvent			target;
 	AppleEvent			event;
 	AppleEvent			localReply;
-	AEDescList			results;
 
 	assert( (reply == NULL) || (reply->descriptorType == typeNull) );
-		
+
 	target = kAENull;
 	event = kAENull;
 	localReply = kAENull;
-    results = kAENull;
-	
+
 	// Create Apple event.
-	
+
 	err = FindSystemEvents(&psn);
 	if (err == noErr) {
 		err = AECreateDesc(typeProcessSerialNumber, &psn, sizeof(psn), &target);
 	}
 	if (err == noErr) {
 		err = AECreateAppleEvent(
-			theClass, 
-			theEvent, 
-			&target, 
-			kAutoGenerateReturnID, 
-			kAnyTransactionID, 
+			theClass,
+			theEvent,
+			&target,
+			kAutoGenerateReturnID,
+			kAnyTransactionID,
 			&event
 		);
 	}
 
 	// Handle varargs parameters.
-	
+
 	if (err == noErr) {
 		va_list 		ap;
 		AEKeyword		thisKeyword;
@@ -529,22 +527,22 @@ static OSStatus SendEventToSystemEventsWithParameters(
 			if (thisKeyword != 0) {
 				thisDesc = va_arg(ap, const AEDesc *);
 				assert(thisDesc != NULL);
-				
+
 				err = AEPutParamDesc(&event, thisKeyword, thisDesc);
 			}
 		} while ( (err == noErr) && (thisKeyword != 0) );
 
 		va_end(ap);
-	}	
-	
+	}
+
 	// Send event and get reply.
-	
+
 	if (err == noErr) {
 		err = SendAppleEvent(&event, &localReply);
 	}
-	
+
 	// Clean up.
-	
+
 	if ( (reply == NULL) || (err != noErr)) {
 		// *reply is already null because of our precondition
 		AEDisposeDescQ(&localReply);
@@ -554,34 +552,34 @@ static OSStatus SendEventToSystemEventsWithParameters(
 	AEDisposeDescQ(&event);
 	AEDisposeDescQ(&target);
 	assert( (reply == NULL) || ((err == noErr) == (reply->descriptorType != typeNull)) );
-	
+
 	return err;
 }
 
 extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 	// See comment in header.
 	//
-	// This routine creates an Apple event that corresponds to the 
+	// This routine creates an Apple event that corresponds to the
 	// AppleScript:
 	//
 	//     get properties of every login item
 	//
-	// and sends it to System Events.  It then processes the reply 
-	// into a CFArray in the format that's documented in the header 
+	// and sends it to System Events.  It then processes the reply
+	// into a CFArray in the format that's documented in the header
 	// comments.
 {
 	OSStatus			err;
 	AppleEvent			reply;
 	AEDescList			results;
 	AEDesc				propertiesOfEveryLoginItem;
-	
+
 	assert( itemsPtr != NULL);
 	assert(*itemsPtr == NULL);
-	
+
 	reply = kAENull;
 	results = kAENull;
 	propertiesOfEveryLoginItem = kAENull;
-	
+
 	// Build object specifier for "properties of every login item".
 
 	{
@@ -590,7 +588,7 @@ extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 		AEDesc	every;
 		AEDesc	everyLoginItem;
 		AEDesc	properties;
-		
+
 		every = kAENull;
 		everyLoginItem = kAENull;
 		properties = kAENull;
@@ -604,11 +602,11 @@ extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 		}
 		if (err == noErr) {
 			err = CreateObjSpecifier(
-				typeProperty, 
-				&everyLoginItem, 
+				typeProperty,
+				&everyLoginItem,
 				formPropertyID,
-				&properties, 
-				false, 
+				&properties,
+				false,
 				&propertiesOfEveryLoginItem);
 		}
 
@@ -616,9 +614,9 @@ extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 		AEDisposeDescQ(&everyLoginItem);
 		AEDisposeDescQ(&properties);
 	}
-	
+
 	// Send event and get reply.
-	
+
 	if (err == noErr) {
 		err = SendEventToSystemEventsWithParameters(
 			kAECoreSuite,
@@ -628,9 +626,9 @@ extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 			0
 		);
 	}
-	
+
 	// Process reply.
-	
+
 	if (err == noErr) {
 		err = AEGetParamDesc(&reply, keyDirectObject, typeAEList, &results);
 	}
@@ -639,28 +637,28 @@ extern OSStatus LIAECopyLoginItems(CFArrayRef *itemsPtr)
 	}
 
 	// Clean up.
-	
+
 	AEDisposeDescQ(&reply);
 	AEDisposeDescQ(&results);
 	AEDisposeDescQ(&propertiesOfEveryLoginItem);
 	assert( (err == noErr) == (*itemsPtr != NULL) );
-	
+
 	return err;
 }
 
 extern OSStatus LIAEAddRefAtEnd(const FSRef *item, Boolean hideIt)
 	// See comment in header.
 	//
-	// This routine creates an Apple event that corresponds to the 
+	// This routine creates an Apple event that corresponds to the
 	// AppleScript:
 	//
-	//     make new login item 
+	//     make new login item
 	// 	       with properties {
 	//			   path:<path of item>,
 	//			   hidden:hideIt
 	//		   }
 	//         at end
-	//	
+	//
 	// and sends it to System Events.
 {
 	OSStatus 			err;
@@ -668,34 +666,34 @@ extern OSStatus LIAEAddRefAtEnd(const FSRef *item, Boolean hideIt)
 	AERecord			properties;
 	AERecord			endLoc;
 	static const DescType cLoginItemLocal = cLoginItem;
-	
+
 	assert(item != NULL);
-	
+
 	newLoginItem = kAENull;
 	endLoc = kAENull;
 	properties = kAENull;
 
 	// Create "new login item" parameter.
-	
+
 	err = AECreateDesc(typeType, &cLoginItemLocal, sizeof(cLoginItemLocal), &newLoginItem);
-	
+
 	// Create "with properties" parameter.
-	
+
 	if (err == noErr) {
 		char		path[1024];
 		AEDesc		pathDesc;
-		
+
 		pathDesc = kAENull;
-		
+
 		err = AECreateList(NULL, 0, true, &properties);
 		if (err == noErr) {
 			err = FSRefMakePath(item, (UInt8 *) path, sizeof(path));
 		}
-		
-		// System Events complains if you pass it typeUTF8Text directly, so 
-		// we do the conversion from typeUTF8Text to typeUnicodeText on our 
+
+		// System Events complains if you pass it typeUTF8Text directly, so
+		// we do the conversion from typeUTF8Text to typeUnicodeText on our
 		// side of the world.
-		
+
 		if (err == noErr) {
 			err = AECoercePtr(typeUTF8Text, path, (Size) strlen(path), typeUnicodeText, &pathDesc);
 		}
@@ -705,18 +703,18 @@ extern OSStatus LIAEAddRefAtEnd(const FSRef *item, Boolean hideIt)
 		if (err == noErr) {
 			err = AEPutKeyPtr(&properties, propHidden, typeBoolean, &hideIt, sizeof(hideIt));
 		}
-		
+
 		AEDisposeDescQ(&pathDesc);
 	}
-	
+
 	// Create "at end" parameter.
-	
+
 	if (err == noErr) {
 		AERecord	end;
 		static const DescType kAEEndLocal = kAEEnd;
 
 		end = kAENull;
-		
+
 		err = AECreateList(NULL, 0, true, &end);
 		if (err == noErr) {
 			err = AEPutKeyPtr(&end, keyAEObject, typeNull, NULL, 0);
@@ -727,12 +725,12 @@ extern OSStatus LIAEAddRefAtEnd(const FSRef *item, Boolean hideIt)
 		if (err == noErr) {
 			err = AECoerceDesc(&end, cInsertionLoc, &endLoc);
 		}
-		
+
 		AEDisposeDescQ(&end);
 	}
-	
+
 	// Send the event.
-		
+
 	if (err == noErr) {
 		err = SendEventToSystemEventsWithParameters(
 			kAECoreSuite,
@@ -746,21 +744,21 @@ extern OSStatus LIAEAddRefAtEnd(const FSRef *item, Boolean hideIt)
 	}
 
 	// Clean up.
-	
+
 	AEDisposeDescQ(&newLoginItem);
 	AEDisposeDescQ(&endLoc);
 	AEDisposeDescQ(&properties);
-	
+
 	return err;
 }
 
 extern OSStatus LIAEAddURLAtEnd(CFURLRef item,     Boolean hideIt)
 	// See comment in header.
 	//
-	// This is implemented as a wrapper around LIAEAddRef.  
-	// I chose to do it this way because an URL can reference a 
-	// file that doesn't except, whereas an FSRef can't, so by 
-	// having the URL routine call the FSRef routine, I naturally 
+	// This is implemented as a wrapper around LIAEAddRef.
+	// I chose to do it this way because an URL can reference a
+	// file that doesn't except, whereas an FSRef can't, so by
+	// having the URL routine call the FSRef routine, I naturally
 	// ensure that the item exists on disk.
 {
 	OSStatus 	err;
@@ -768,12 +766,12 @@ extern OSStatus LIAEAddURLAtEnd(CFURLRef item,     Boolean hideIt)
 	FSRef		ref;
 
 	assert(item != NULL);
-		
+
 	err = noErr;
 	success = CFURLGetFSRef(item, &ref);
 	if ( ! success ) {
-		// I have no idea what went wrong (thanks CF!).  Normally I'd 
-		// return coreFoundationUnknownErr here, but in this case I'm 
+		// I have no idea what went wrong (thanks CF!).  Normally I'd
+		// return coreFoundationUnknownErr here, but in this case I'm
 		// going to go out on a limb and say that we have a file not found.
 		err = fnfErr;
 	}
@@ -781,27 +779,27 @@ extern OSStatus LIAEAddURLAtEnd(CFURLRef item,     Boolean hideIt)
 	if (err == noErr) {
 		err = LIAEAddRefAtEnd(&ref, hideIt);
 	}
-	
+
 	return err;
 }
 
 extern OSStatus LIAERemove(CFIndex itemIndex)
 	// See comment in header.
 	//
-	// This routine creates an Apple event that corresponds to the 
+	// This routine creates an Apple event that corresponds to the
 	// AppleScript:
 	//
 	//     delete login item itemIndex
-	//	
+	//
 	// and sends it to System Events.
 {
 	OSStatus	err;
 	long		itemIndexPlusOne;
 	AEDesc		indexDesc;
 	AEDesc		loginItemAtIndex;
-	
+
 	assert(itemIndex >= 0);
-	
+
 	indexDesc = kAENull;
 	loginItemAtIndex = kAENull;
 
@@ -829,6 +827,6 @@ extern OSStatus LIAERemove(CFIndex itemIndex)
 
 	AEDisposeDescQ(&indexDesc);
 	AEDisposeDescQ(&loginItemAtIndex);
-	
+
 	return err;
 }
