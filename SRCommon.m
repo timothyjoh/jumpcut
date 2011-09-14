@@ -172,7 +172,6 @@ NSString *SRCharacterForKeyCodeAndCocoaFlags(signed short keyCode, unsigned int 
     UInt32          keyTranslateState;
 	UInt32              deadKeyState;
     OSStatus err = noErr;
-    CFLocaleRef locale = CFLocaleCopyCurrent();
 	
 	CFMutableStringRef resultString;
 	
@@ -244,6 +243,8 @@ NSString *SRCharacterForKeyCodeAndCocoaFlags(signed short keyCode, unsigned int 
 		if(temp)
 			CFRelease(temp);
 	}   
+	CFLocaleRef locale = CFLocaleCopyCurrent();
+
 	CFStringCapitalize(resultString, locale);
 	CFRelease(locale);
 	
@@ -366,7 +367,7 @@ static NSMutableDictionary *SRSharedImageCache = nil;
 	[customImageRep setSize:size];
 //	NSLog(@"created customImageRep: %@", customImageRep);
 	NSImage *returnImage = [[NSImage alloc] initWithSize:size];
-	[returnImage addRepresentation:customImageRep];
+	[returnImage addRepresentation:customImageRep]; [customImageRep release];
 	[returnImage setScalesWhenResized:YES];
 	[SRSharedImageCache setObject:returnImage forKey:name];
 	
@@ -429,7 +430,7 @@ static NSMutableDictionary *SRSharedImageCache = nil;
 	[flip scaleXBy:0.9 yBy:1.0];
 	[flip translateXBy:0.5 yBy:-0.5];
 	
-	[bp transformUsingAffineTransform:flip];
+	[bp transformUsingAffineTransform:flip]; [flip release];
 	
 	NSShadow *sh = [[NSShadow alloc] init];
 	[sh setShadowColor:[[NSColor blackColor] colorWithAlphaComponent:0.45]];
@@ -438,6 +439,8 @@ static NSMutableDictionary *SRSharedImageCache = nil;
 	[sh set];
 	
 	[bp fill];
+	[sh release];
+	[bp release];
 	
 }
 
